@@ -4,7 +4,7 @@ from itertools import chain
 import skimage.io as io
 import os
 import tools
-from DIP.models.skip import skip
+from DIP.DIP.models.skip import skip
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cgitpu")
 
