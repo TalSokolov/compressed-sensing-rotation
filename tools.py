@@ -55,9 +55,9 @@ def load_y(path, ch, stack=True):
     y = []
     for channel in ch:
         try:
-            v = io.imread(os.path.join(path, '{}.tiff'.format(channel)))
-        except FileNotFoundError:
             v = io.imread(os.path.join(path, '{}.tif'.format(channel)))
+        except FileNotFoundError:
+            v = io.imread(os.path.join(path, '{}.tiff'.format(channel)))
         y.append(v)
     if stack:
         y = np.stack(y).astype(np.float32)
