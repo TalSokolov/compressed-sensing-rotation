@@ -6,7 +6,7 @@ import os
 import tools
 from DIP.DIP.models.skip import skip
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cgitpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def create_net(input_dim):
