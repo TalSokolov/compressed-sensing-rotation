@@ -7,7 +7,7 @@ import tools
 from DIP.models.skip import skip
 import argparse
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cgitpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Parameters
 parser = argparse.ArgumentParser(description='Compressed Sensing')
