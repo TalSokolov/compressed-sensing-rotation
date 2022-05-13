@@ -4,9 +4,16 @@ from itertools import chain
 import skimage.io as io
 import os
 import tools
-from DIP.DIP.models.skip import skip
+from DIP.models.skip import skip
+import argparse
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cgitpu")
+
+# Parameters
+parser = argparse.ArgumentParser(description='Compressed Sensing')
+parser.add_argument('--lr', type=float, default=0.005)
+parser.add_argument('--n_iter', type=int, default=100000)
+parser.add_argument('--lambda_sparsity', type=float, default=1)
 
 
 def create_net(input_dim):
@@ -34,6 +41,8 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
     noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
 
+    print("start running with lr={}, n_iter={}, lambda_sparcity={}".format(lr, n_iter, lambda_sparsity))
+
     loss_list = []
     loss_recon_list = []
     loss_sparsity_list = []
@@ -53,7 +62,7 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
         loss_recon_list.append(loss_recon.item())
         loss_sparsity_list.append(loss_sparsity.item())
 
-        if i % 1 == 0:
+        if i % 100 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
 
@@ -61,22 +70,24 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
             for j, channel in enumerate(channels_names):
                 io.imsave(os.path.join(save_path, 'pred_{}.tif'.format(channel)), x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
+            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lambda_sparsity)
 
-    tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lambda_sparsity)
 
     return noise
 
 
-def run():
+def run(args):
     channels_names = tools.load_channels_names()
     y = tools.load_y(tools.PROJ_PATH, tools.MULTI)
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
-    opt(w, y, lambda_sparsity=1, channels_names=channels_names,
+    opt(w, y, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1],
-        input_dim=3)
+        input_dim=3, n_iter=args.n_iter, lr=args.lr)
 
 
 if __name__ == '__main__':
 
-    run()
+    args = parser.parse_args()
+
+    run(args)
