@@ -26,3 +26,8 @@ def run():
 
     y_hat = np.array([[np.array(w)@x[i][j] for i in range(x.shape[1])] for j in range(x.shape[0])])
     print(torch.sum(y-y_hat > 10**-16)/((1024**2)*3))
+
+
+if __name__ == '__main__':
+
+    run()

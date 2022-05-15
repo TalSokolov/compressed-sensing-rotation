@@ -59,6 +59,12 @@ def run(lambda_sparsity):
         tools.evaluate(ch, gt[j], j)
 
 
+if __name__ == '__main__':
+
+    run()
+
+
+
 
 
 
