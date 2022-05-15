@@ -66,7 +66,7 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
         if i % 100 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
-            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lambda_sparsity)
+            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lr, input_dim)
 
 
         if i % 1000 == 0:
