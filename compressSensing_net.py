@@ -42,7 +42,7 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
     noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
 
-    print("start running with lr={}, n_iter={}, lambda_sparcity={}".format(lr, n_iter, lambda_sparsity))
+    print("start running with lr={}, n_iter={}, lambda_sparcity= {}".format(lr, n_iter, lambda_sparsity))
 
     loss_list = []
     loss_recon_list = []
