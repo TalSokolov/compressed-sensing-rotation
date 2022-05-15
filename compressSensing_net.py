@@ -13,6 +13,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser(description='Compressed Sensing')
 parser.add_argument('--lr', type=float, default=0.005)
 parser.add_argument('--n_iter', type=int, default=100000)
+parser.add_argument('--input_dim', type=int, default=32)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 
 
@@ -21,7 +22,7 @@ def create_net(input_dim):
         def __init__(self):
             super(Net, self).__init__()
             self.net = skip(
-                3, 7,
+                input_dim, 7,
                 num_channels_down=[8, 16, 32, 64, 128],
                 num_channels_up=[8, 16, 32, 64, 128],
                 num_channels_skip=[4, 4, 4, 4, 4],
@@ -65,12 +66,13 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
         if i % 100 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
+            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lambda_sparsity)
+
 
         if i % 1000 == 0:
             for j, channel in enumerate(channels_names):
                 io.imsave(os.path.join(save_path, 'pred_{}.tif'.format(channel)), x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
-            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lambda_sparsity)
 
 
     return noise
@@ -83,7 +85,7 @@ def run(args):
     w = tools.load_w()
     opt(w, y, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1],
-        input_dim=3, n_iter=args.n_iter, lr=args.lr)
+        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr)
 
 
 if __name__ == '__main__':
