@@ -51,7 +51,7 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
     for i in range(n_iter):
         optimizer.zero_grad()
         net_input = noise # + (noise.normal_() * 10)
-        x = net(net_input)
+        x = net(y) #net(net_input)
         y_recon = F.conv2d(x, w)
         loss_sparsity = torch.mean(torch.abs(x))
         loss_recon = F.mse_loss(y_recon, y)
@@ -85,7 +85,7 @@ def run(args):
     w = tools.load_w()
     opt(w, y, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1],
-        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr)
+        input_dim=y.shape[1], n_iter=args.n_iter, lr=args.lr)
 
 
 if __name__ == '__main__':
