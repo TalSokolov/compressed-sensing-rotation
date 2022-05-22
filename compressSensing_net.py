@@ -6,6 +6,7 @@ import os
 import tools
 from DIP.models.skip import skip
 import argparse
+from datetime import datetime
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -36,6 +37,7 @@ def create_net(input_dim):
 
 
 def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32):
+    now = datetime.now()
     net = create_net(input_dim)
     noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
@@ -64,12 +66,14 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
         if i % 100 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
-            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lr, input_dim)
+            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lr, input_dim, now.strftime("%m/%d_%H:%M"))
 
 
         if i % 1000 == 0:
             for j, channel in enumerate(channels_names):
-                io.imsave(os.path.join(save_path, 'pred_lr_{}_inputdim_{}_{}.tif'.format(lr, input_dim, channel)), x[0][j].detach().cpu().numpy(),
+                io.imsave(os.path.join(save_path, 'pred_lr_{}_inputdim_{}_{}_{}.tif'.format(lr, input_dim, channel,
+                                                                                            now.strftime("%m/%d_%H:%M"))),
+                          x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
 
 
