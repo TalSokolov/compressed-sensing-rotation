@@ -11,7 +11,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Parameters
 parser = argparse.ArgumentParser(description='Compressed Sensing')
-parser.add_argument('--lr', type=float, default=0.005)
+parser.add_argument('--lr', type=float, default=0.05)
 parser.add_argument('--n_iter', type=int, default=100000)
 parser.add_argument('--input_dim', type=int, default=32)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
@@ -26,10 +26,8 @@ def create_net(input_dim):
                 num_channels_down=[8, 16, 32, 64, 128],
                 num_channels_up=[8, 16, 32, 64, 128],
                 num_channels_skip=[4, 4, 4, 4, 4],
-                upsample_mode='bilinear',
-                filter_size_down=5,
-                filter_size_up=5,
-                need_bias=True, pad='reflection', act_fun='LeakyReLU').to(device)
+                upsample_mode='bilinear', filter_size_down=5, filter_size_up=5,
+                need_relu=True, need_bias=True, pad='reflection', act_fun='LeakyReLU').to(device)
 
         def forward(self, net_input):
             return self.net(net_input)
@@ -50,8 +48,8 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        net_input = noise # + (noise.normal_() * 10)
-        x = net(y) #net(net_input)
+        net_input = noise  # + (noise.normal_() * 10)
+        x = net(net_input)
         y_recon = F.conv2d(x, w)
         loss_sparsity = torch.mean(torch.abs(x))
         loss_recon = F.mse_loss(y_recon, y)
