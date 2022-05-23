@@ -72,7 +72,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
         if i % 1000 == 0:
             for j, channel in enumerate(channels_names):
-                io.imsave(os.path.join(save_path, 'pred_{}_{}_sparsity_{}.tif'.format(channel, time, lambda_sparsity)),
+                io.imsave(os.path.join(save_path, 'pred_{}_{}_sparsity_{}_addnoise.tif'.format(channel, time, lambda_sparsity)),
 
                           x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
