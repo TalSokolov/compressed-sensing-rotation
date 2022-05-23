@@ -17,7 +17,7 @@ def load_channels_names():
     return channels
 
 
-def evaluate(ch, gt, idx):
+def evaluate(ch, gt, idx, sparsity):
 
     bool_ch = (np.matrix(ch) > 0).astype(int)
     bool_gt = (np.matrix(gt) > 0).astype(int)
@@ -29,7 +29,7 @@ def evaluate(ch, gt, idx):
     plt.figure(idx)
     plt.pie([FP, FN, TP, TN], labels=['False Positive', 'False Negative', 'True Positive', 'True Negative'], autopct='%1.1f%%')
     plt.title('Channel {}'.format(CHANNELS[idx]))
-    plt.savefig(os.path.join(save_path, 'eval {}.tiff'.format(CHANNELS[idx])))
+    plt.savefig(os.path.join(save_path, 'eval {}_spar_{}.tiff'.format(CHANNELS[idx], sparsity)))
     plt.close()
     return
 
