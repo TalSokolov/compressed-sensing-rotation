@@ -36,7 +36,7 @@ def create_net(input_dim):
     return Net()
 
 
-def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32):
+def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32):
     now = datetime.now()
     time = now.strftime("%m%d_%H%M")
     net = create_net(input_dim)
@@ -77,6 +77,10 @@ def opt(w, y, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_
                           x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
 
+        for j, channel in enumerate(channels_names):
+            ch = F.relu(x)[0][j].detach().cpu().numpy()
+            tools.evaluate(ch, gt[j], j)
+
 
     return noise
 
@@ -86,7 +90,7 @@ def run(args):
     y = tools.load_y(tools.PROJ_PATH, tools.MULTI)
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
-    opt(w, y, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
+    opt(w, y, gt, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1],
         input_dim=y.shape[1], n_iter=args.n_iter, lr=args.lr)
     #
