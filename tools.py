@@ -30,7 +30,7 @@ def evaluate(ch, gt, idx):
     plt.pie([FP, FN, TP, TN], labels=['False Positive', 'False Negative', 'True Positive', 'True Negative'], autopct='%1.1f%%')
     plt.title('Channel {}'.format(CHANNELS[idx]))
     plt.savefig(os.path.join(save_path, 'eval {}.tiff'.format(CHANNELS[idx])))
-
+    plt.close()
     return
 
 
@@ -49,6 +49,7 @@ def plot_losses(loss, lr, imput_dim, time):
                                                                               time)))
     plt.xlabel('iterations')
     plt.show()
+    plt.close()
 
 
 
