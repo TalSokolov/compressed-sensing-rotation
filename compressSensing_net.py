@@ -7,6 +7,7 @@ import tools
 from DIP.models.skip import skip
 import argparse
 from datetime import datetime
+import wandb
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -37,6 +38,13 @@ def create_net(input_dim):
 
 
 def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32):
+    wandb.init(project="my-test-project", entity="talso")
+    wandb.config = {
+        "learning_rate": lr,
+        "epochs": n_iter,
+        "input_dim": input_dim,
+        "sparcity_loss": lambda_sparsity
+    }
     now = datetime.now()
     time = now.strftime("%m%d_%H%M")
     net = create_net(input_dim)
@@ -51,10 +59,10 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        net_input = noise #+ (noise.normal_() * 1)
+        net_input = y #noise #+ (noise.normal_() * 1)
         x = net(net_input)
         y_recon = F.conv2d(x, w)
-        loss_sparsity = torch.mean(torch.abs(x))#(torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #
+        loss_sparsity = (torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
         loss_recon = F.mse_loss(y_recon, y)
         loss = loss_recon + lambda_sparsity * loss_sparsity
         loss.backward()
@@ -63,14 +71,17 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         loss_list.append(loss.item())
         loss_recon_list.append(loss_recon.item())
         loss_sparsity_list.append(loss_sparsity.item())
+        wandb.log({"loss": loss})
+        wandb.log({"loss reconstructin": loss_recon})
+        wandb.log({"loss sparcity": loss_sparsity})
 
-        if i % 1 == 0:
+        if i % 10 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
             tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lr, input_dim, time, lambda_sparsity)
 
 
-        if i % 10 == 0:
+        if i % 100 == 0:
             for j, channel in enumerate(channels_names):
                 io.imsave(os.path.join(save_path, 'pred_{}_{}_sparsity_{}_addnoise.tif'.format(channel, time, lambda_sparsity)),
 
