@@ -29,7 +29,7 @@ def evaluate(ch, gt, idx, sparsity):
     plt.figure(idx)
     plt.pie([FP, FN, TP, TN], labels=['False Positive', 'False Negative', 'True Positive', 'True Negative'], autopct='%1.1f%%')
     plt.title('Channel {}'.format(CHANNELS[idx]))
-    plt.savefig(os.path.join(save_path, 'eval {}_spar_{}.tiff'.format(CHANNELS[idx], sparsity)))
+    plt.savefig(os.path.join(save_path, 'eval {}_spar_{}_addnoise.tiff'.format(CHANNELS[idx], sparsity)))
     plt.close()
     return
 
@@ -45,7 +45,7 @@ def plot_losses(loss, lr, imput_dim, time, sparsity):
     plt.plot(range(len(loss_recon_list)), loss_recon_list)
     plt.plot(range(len(loss_sparsity_list)), loss_sparsity_list)
     plt.legend(['loss', 'recon', 'sparcity'])
-    plt.savefig(os.path.join(save_path, 'losses_{}_sparsity_{}.jpg'.format(time, sparsity)))
+    plt.savefig(os.path.join(save_path, 'losses_{}_sparsity_{}_addnoise.jpg'.format(time, sparsity)))
     plt.xlabel('iterations')
     plt.show()
     plt.close()

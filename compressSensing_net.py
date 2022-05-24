@@ -51,10 +51,10 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        net_input = noise + (noise.normal_() * 10)
+        net_input = noise #+ (noise.normal_() * 1)
         x = net(net_input)
         y_recon = F.conv2d(x, w)
-        loss_sparsity = (torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) # torch.mean(torch.abs(x))
+        loss_sparsity = torch.mean(torch.abs(x))#(torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #
         loss_recon = F.mse_loss(y_recon, y)
         loss = loss_recon + lambda_sparsity * loss_sparsity
         loss.backward()
@@ -64,13 +64,13 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         loss_recon_list.append(loss_recon.item())
         loss_sparsity_list.append(loss_sparsity.item())
 
-        if i % 100 == 0:
+        if i % 1 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
             tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lr, input_dim, time, lambda_sparsity)
 
 
-        if i % 1000 == 0:
+        if i % 10 == 0:
             for j, channel in enumerate(channels_names):
                 io.imsave(os.path.join(save_path, 'pred_{}_{}_sparsity_{}_addnoise.tif'.format(channel, time, lambda_sparsity)),
 
