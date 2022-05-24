@@ -59,7 +59,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        net_input = y #noise #+ (noise.normal_() * 1)
+        net_input = noise #+ (noise.normal_() * 1)
         x = net(net_input)
         y_recon = F.conv2d(x, w)
         loss_sparsity = (torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
