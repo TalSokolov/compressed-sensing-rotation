@@ -40,7 +40,7 @@ def create_net(input_dim):
 
 def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32, rand_noise=0):
     run_name = 'lr {} input dim {} sparcity loss {} noise {}'.format(lr, input_dim, lambda_sparsity, rand_noise)
-    wandb.init(project="CSR", entity="talso", name=run_names)
+    wandb.init(project="CSR", entity="talso", name=run_name)
     wandb.config = {
         "learning_rate": lr,
         "epochs": n_iter,
