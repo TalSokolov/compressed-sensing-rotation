@@ -28,7 +28,7 @@ def create_net(input_dim):
                 input_dim, 7,
                 num_channels_down=[8, 16, 32, 64, 128],
                 num_channels_up=[8, 16, 32, 64, 128],
-                num_channels_skip=[0, 4, 4, 4, 4],
+                num_channels_skip=[0, 0, 4, 4, 4],
                 upsample_mode='bilinear', filter_size_down=5, filter_size_up=5,
                 need_relu=True, need_bias=True, pad='reflection', act_fun='LeakyReLU').to(device)
 
