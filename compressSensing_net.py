@@ -39,9 +39,8 @@ def create_net(input_dim):
 
 
 def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32, rand_noise=0):
-    wandb.init(project="CSR", entity="talso", name='lr {} input dim {} sparcity loss {} noise {}'.format(lr, input_dim,
-                                                                                                         lambda_sparsity,
-                                                                                                         'none'))
+    run_name = 'lr {} input dim {} sparcity loss {} noise {}'.format(lr, input_dim, lambda_sparsity, rand_noise)
+    wandb.init(project="CSR", entity="talso", name=run_name)
     wandb.config = {
         "learning_rate": lr,
         "epochs": n_iter,
@@ -55,7 +54,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
     noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
 
-    print("start running with lr={}, n_iter={}, lambda_sparcity= {}".format(lr, n_iter, lambda_sparsity))
+    print("start running with {}".format(run_name))
 
     loss_list = []
     loss_recon_list = []
@@ -82,12 +81,12 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         if i % 10 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
-            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], lr, input_dim, time, lambda_sparsity)
+            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], run_name)
 
 
         if i % 100 == 0:
             for j, channel in enumerate(channels_names):
-                io.imsave(os.path.join(save_path, 'pred_{}_{}_sparsity_{}_addnoise.tif'.format(channel, time, lambda_sparsity)),
+                io.imsave(os.path.join(save_path, 'pred_{}_{}.tif'.format(channel, run_name)),
 
                           x[0][j].detach().cpu().numpy(),
                           check_contrast=False)

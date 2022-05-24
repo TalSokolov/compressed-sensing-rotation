@@ -34,7 +34,7 @@ def evaluate(ch, gt, idx, sparsity):
     return
 
 
-def plot_losses(loss, lr, imput_dim, time, sparsity):
+def plot_losses(loss, run_name):
 
     loss_list = loss[0]
     loss_recon_list = loss[1]
@@ -45,7 +45,7 @@ def plot_losses(loss, lr, imput_dim, time, sparsity):
     plt.plot(range(len(loss_recon_list)), loss_recon_list)
     plt.plot(range(len(loss_sparsity_list)), loss_sparsity_list)
     plt.legend(['loss', 'recon', 'sparcity'])
-    plt.savefig(os.path.join(save_path, 'losses_.jpg'.format(time)))
+    plt.savefig(os.path.join(save_path, 'losses_{}.jpg'.format(run_name)))
     plt.xlabel('iterations')
     plt.show()
     plt.close()
