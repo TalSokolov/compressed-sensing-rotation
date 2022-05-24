@@ -28,7 +28,7 @@ def create_net(input_dim):
                 input_dim, 7,
                 num_channels_down=[8, 16, 32, 64, 128],
                 num_channels_up=[8, 16, 32, 64, 128],
-                num_channels_skip=[0, 0, 4, 4, 4],
+                num_channels_skip=[4, 4, 4, 4, 4],
                 upsample_mode='bilinear', filter_size_down=5, filter_size_up=5,
                 need_relu=True, need_bias=True, pad='reflection', act_fun='LeakyReLU').to(device)
 
@@ -63,7 +63,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        net_input = noise + (noise.normal_() * rand_noise)
+        net_input = noise #+ (noise.normal_() * rand_noise)
         x = net(net_input)
         y_recon = F.conv2d(x, w)
         loss_sparsity = (torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
