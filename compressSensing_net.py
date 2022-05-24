@@ -28,7 +28,7 @@ def create_net(input_dim):
                 input_dim, 7,
                 num_channels_down=[8, 16, 32, 64, 128],
                 num_channels_up=[8, 16, 32, 64, 128],
-                num_channels_skip=[4, 4, 4, 4, 4],
+                num_channels_skip=[0, 4, 4, 4, 4],
                 upsample_mode='bilinear', filter_size_down=5, filter_size_up=5,
                 need_relu=True, need_bias=True, pad='reflection', act_fun='LeakyReLU').to(device)
 
@@ -48,8 +48,9 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         "sparcity_loss": lambda_sparsity,
         "noise": rand_noise
     }
-    now = datetime.now()
-    time = now.strftime("%m%d_%H%M")
+
+    #now = datetime.now()
+    #time = now.strftime("%m%d_%H%M")
     net = create_net(input_dim)
     noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
