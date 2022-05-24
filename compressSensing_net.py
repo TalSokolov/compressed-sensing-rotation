@@ -17,6 +17,7 @@ parser.add_argument('--lr', type=float, default=0.05)
 parser.add_argument('--n_iter', type=int, default=100000)
 parser.add_argument('--input_dim', type=int, default=32)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
+parser.add_argument('--noise', type=float, default=0)
 
 
 def create_net(input_dim):
@@ -37,13 +38,16 @@ def create_net(input_dim):
     return Net()
 
 
-def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32):
-    wandb.init(project="my-test-project", entity="talso")
+def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32, rand_noise=0):
+    wandb.init(project="CSR", entity="talso", name='lr {} input dim {} sparcity loss {} noise {}'.format(lr, input_dim,
+                                                                                                         lambda_sparsity,
+                                                                                                         'none'))
     wandb.config = {
         "learning_rate": lr,
         "epochs": n_iter,
         "input_dim": input_dim,
         "sparcity_loss": lambda_sparsity
+        "noise": rand_noise
     }
     now = datetime.now()
     time = now.strftime("%m%d_%H%M")
@@ -59,7 +63,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        net_input = noise #+ (noise.normal_() * 1)
+        net_input = noise + (noise.normal_() * rand_noise)
         x = net(net_input)
         y_recon = F.conv2d(x, w)
         loss_sparsity = (torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
@@ -103,7 +107,7 @@ def run(args):
     w = tools.load_w()
     opt(w, y, gt, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1],
-        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr)
+        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise)
     #
 
 if __name__ == '__main__':
