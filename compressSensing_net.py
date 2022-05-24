@@ -45,7 +45,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         "learning_rate": lr,
         "epochs": n_iter,
         "input_dim": input_dim,
-        "sparcity_loss": lambda_sparsity
+        "sparcity_loss": lambda_sparsity,
         "noise": rand_noise
     }
     now = datetime.now()
