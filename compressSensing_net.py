@@ -57,10 +57,6 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
     print("start running with {}".format(run_name))
 
-    loss_list = []
-    loss_recon_list = []
-    loss_sparsity_list = []
-
     for i in range(n_iter):
         optimizer.zero_grad()
         net_input = noise #+ (noise.normal_() * rand_noise)
@@ -68,13 +64,10 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         y_recon = F.conv2d(x, w)
         loss_sparsity = (torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
         loss_recon = F.mse_loss(y_recon, y)
-        loss = loss_recon + lambda_sparsity * loss_sparsity
+        loss = loss_recon + lambda_sparsity * abs(loss_sparsity)
         loss.backward()
         optimizer.step()
 
-        loss_list.append(loss.item())
-        loss_recon_list.append(loss_recon.item())
-        loss_sparsity_list.append(loss_sparsity.item())
         wandb.log({"loss": loss})
         wandb.log({"loss reconstructin": loss_recon})
         wandb.log({"loss sparcity": loss_sparsity})
@@ -82,13 +75,10 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         if i % 10 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
-            tools.plot_losses([loss_list, loss_recon_list, loss_sparsity_list], run_name)
-
 
         if i % 100 == 0:
             for j, channel in enumerate(channels_names):
                 io.imsave(os.path.join(save_path, 'pred_{}_{}.tif'.format(channel, run_name)),
-
                           x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
 
