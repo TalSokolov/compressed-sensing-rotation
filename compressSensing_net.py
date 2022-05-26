@@ -93,7 +93,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
 
         for j, channel in enumerate(channels_names):
             ch = F.relu(x)[0][j].detach().cpu().numpy()
-            tools.evaluate(ch, gt[j], j, lambda_sparsity, run_name)
+            tools.evaluate(ch, gt[j], j, run_name)
 
 
     return noise
