@@ -8,7 +8,7 @@ from DIP.models.skip import skip
 import argparse
 from datetime import datetime
 import torchvision.transforms as T
-import torchvision.transforms.functional as TF
+#import torchvision.transforms.functional as TF
 import wandb
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -63,8 +63,8 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         optimizer.zero_grad()
         if IL:
             r, l, h, w = T.RandomCrop.get_params(y, output_size=[512, 512])
-            net_input = TF.crop(noise, r, l, h, w)
-            y_ref = TF.crop(y, r, l, h, w)
+            #net_input = TF.crop(noise, r, l, h, w)
+            #y_ref = TF.crop(y, r, l, h, w)
         else:
             net_input = noise
             y_ref = y
