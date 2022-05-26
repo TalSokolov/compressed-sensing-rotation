@@ -7,6 +7,8 @@ import tools
 from DIP.models.skip import skip
 import argparse
 from datetime import datetime
+import torchvision.transforms as T
+import torchvision.transforms.functional as TF
 import wandb
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -14,10 +16,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Parameters
 parser = argparse.ArgumentParser(description='Compressed Sensing')
 parser.add_argument('--lr', type=float, default=0.05)
-parser.add_argument('--n_iter', type=int, default=100000)
+parser.add_argument('--n_iter', type=int, default=10000)
 parser.add_argument('--input_dim', type=int, default=32)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
+parser.add_argument('--IL', type=float, default=False)
 
 
 def create_net(input_dim):
@@ -38,7 +41,8 @@ def create_net(input_dim):
     return Net()
 
 
-def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005, n_iter=100000, input_dim=32, rand_noise=0):
+def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
+        rand_noise, IL, save_path='outputs'):
     run_name = 'lr {} input dim {} sparcity loss {} noise {}'.format(lr, input_dim, lambda_sparsity, rand_noise)
     wandb.init(project="CSR", entity="talso", name=run_name)
     wandb.config = {
@@ -49,8 +53,6 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
         "noise": rand_noise
     }
 
-    #now = datetime.now()
-    #time = now.strftime("%m%d_%H%M")
     net = create_net(input_dim)
     noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
@@ -59,11 +61,18 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        net_input = noise #+ (noise.normal_() * rand_noise)
+        if IL:
+            r, l, h, w = T.RandomCrop.get_params(y, output_size=[512, 512])
+            net_input = TF.crop(noise, r, l, h, w)
+            y_ref = TF.crop(y, r, l, h, w)
+        else:
+            net_input = noise
+            y_ref = y
         x = net(net_input)
+
         y_recon = F.conv2d(x, w)
-        loss_sparsity = (torch.count_nonzero(y) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
-        loss_recon = F.mse_loss(y_recon, y)
+        loss_sparsity = (torch.count_nonzero(y_ref) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
+        loss_recon = F.mse_loss(y_recon, y_ref)
         loss = loss_recon + lambda_sparsity * abs(loss_sparsity)
         loss.backward()
         optimizer.step()
@@ -84,7 +93,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, save_path='outputs', lr=0.005
 
         for j, channel in enumerate(channels_names):
             ch = F.relu(x)[0][j].detach().cpu().numpy()
-            tools.evaluate(ch, gt[j], j, lambda_sparsity)
+            tools.evaluate(ch, gt[j], j, lambda_sparsity, run_name)
 
 
     return noise
@@ -96,8 +105,8 @@ def run(args):
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
     opt(w, y, gt, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
-        save_path=tools.save_path.split('compressed-sensing-rotation/')[-1],
-        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise)
+        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise, IL=args.IL,
+        save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
     #
 
 if __name__ == '__main__':
