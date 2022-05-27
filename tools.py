@@ -21,10 +21,11 @@ def evaluate(ch, gt, idx, run_name):
 
     bool_ch = (np.matrix(ch) > 0).astype(int)
     bool_gt = (np.matrix(gt) > 0).astype(int)
-    FP = np.sum((bool_ch - bool_gt) > 0)/(1024**2)
-    FN = np.sum((bool_gt - bool_ch) > 0)/(1024**2)
-    TP = np.sum((bool_gt + bool_ch) == 2)/(1024**2)
-    TN = np.sum((bool_gt + bool_ch) == 0)/(1024**2)
+    area = ch.shape[0]*ch.shape[1]
+    FP = np.sum((bool_ch - bool_gt) > 0)/(area)
+    FN = np.sum((bool_gt - bool_ch) > 0)/(area)
+    TP = np.sum((bool_gt + bool_ch) == 2)/(area)
+    TN = np.sum((bool_gt + bool_ch) == 0)/(area)
 
     plt.figure(idx)
     plt.pie([FP, FN, TP, TN], labels=['False Positive', 'False Negative', 'True Positive', 'True Negative'], autopct='%1.1f%%')

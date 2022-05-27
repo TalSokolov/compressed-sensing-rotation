@@ -7,8 +7,8 @@ import tools
 from DIP.models.skip import skip
 import argparse
 from datetime import datetime
-#import torchvision.transforms as T
-#import torchvision.transforms.functional as TF
+import torchvision.transforms as T
+import torchvision.transforms.functional as TF
 import wandb
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -20,7 +20,8 @@ parser.add_argument('--n_iter', type=int, default=10000)
 parser.add_argument('--input_dim', type=int, default=32)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
-parser.add_argument('--IL', type=float, default=False)
+parser.add_argument('--IL', type=float, default=True)
+parser.add_argument('--log', type=float, default=True)
 
 
 def create_net(input_dim):
@@ -42,16 +43,17 @@ def create_net(input_dim):
 
 
 def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
-        rand_noise, IL, save_path='outputs'):
+        rand_noise, IL, log, save_path='outputs'):
     run_name = 'lr {} input dim {} sparcity loss {} noise {}'.format(lr, input_dim, lambda_sparsity, rand_noise)
-    wandb.init(project="CSR", entity="talso", name=run_name)
-    wandb.config = {
-        "learning_rate": lr,
-        "epochs": n_iter,
-        "input_dim": input_dim,
-        "sparcity_loss": lambda_sparsity,
-        "noise": rand_noise
-    }
+    if log:
+        wandb.init(project="CSR", entity="talso", name=run_name)
+        wandb.config = {
+            "learning_rate": lr,
+            "epochs": n_iter,
+            "input_dim": input_dim,
+            "sparcity_loss": lambda_sparsity,
+            "noise": rand_noise
+        }
 
     net = create_net(input_dim)
     noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
@@ -62,9 +64,9 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
     for i in range(n_iter):
         optimizer.zero_grad()
         if IL:
-            r, l, h, w = T.RandomCrop.get_params(y, output_size=[512, 512])
-            #net_input = TF.crop(noise, r, l, h, w)
-            #y_ref = TF.crop(y, r, l, h, w)
+            R, L, H, W = T.RandomCrop.get_params(y, output_size=[512, 512])
+            net_input = TF.crop(noise, R, L, H, W)
+            y_ref = TF.crop(y, R, L, H, W)
         else:
             net_input = noise
             y_ref = y
@@ -76,10 +78,10 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         loss = loss_recon + lambda_sparsity * abs(loss_sparsity)
         loss.backward()
         optimizer.step()
-
-        wandb.log({"loss": loss})
-        wandb.log({"loss reconstructin": loss_recon})
-        wandb.log({"loss sparcity": loss_sparsity})
+        if log:
+            wandb.log({"loss": loss})
+            wandb.log({"loss reconstructin": loss_recon})
+            wandb.log({"loss sparcity": loss_sparsity})
 
         if i % 10 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
@@ -91,10 +93,10 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
                           x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
 
-        for j, channel in enumerate(channels_names):
-            ch = F.relu(x)[0][j].detach().cpu().numpy()
-            tools.evaluate(ch, gt[j], j, run_name)
-
+            for j, channel in enumerate(channels_names):
+                full_x = net(noise)
+                ch = F.relu(full_x)[0][j].detach().cpu().numpy()
+                tools.evaluate(ch, gt[j], j, run_name)
 
     return noise
 
@@ -105,7 +107,7 @@ def run(args):
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
     opt(w, y, gt, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
-        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise, IL=args.IL,
+        input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise, IL=args.IL, log=args.log,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
     #
 
