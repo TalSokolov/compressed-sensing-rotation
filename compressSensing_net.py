@@ -88,13 +88,14 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
 
         if i % 100 == 0:
+            full_x = net(noise)
+
             for j, channel in enumerate(channels_names):
                 io.imsave(os.path.join(save_path, 'pred_{}_{}.tif'.format(channel, run_name)),
-                          x[0][j].detach().cpu().numpy(),
+                          full_x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
 
             for j, channel in enumerate(channels_names):
-                full_x = net(noise)
                 ch = F.relu(full_x)[0][j].detach().cpu().numpy()
                 tools.evaluate(ch, gt[j], j, run_name)
 
