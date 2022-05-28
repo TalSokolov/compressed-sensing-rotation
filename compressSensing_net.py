@@ -10,6 +10,7 @@ from datetime import datetime
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
 import wandb
+import random
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -64,7 +65,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        if IL:
+        if IL and random.uniform(0, 1) > 0.5:
             R, L, H, W = T.RandomCrop.get_params(y, output_size=[512, 512])
             net_input = TF.crop(noise, R, L, H, W)
             y_ref = TF.crop(y, R, L, H, W)
