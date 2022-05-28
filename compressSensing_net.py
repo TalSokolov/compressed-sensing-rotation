@@ -46,7 +46,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         rand_noise, IL, log, save_path='outputs'):
     run_name = 'lr {} input dim {} sparcity loss {} noise {}'.format(lr, input_dim, lambda_sparsity, rand_noise)
     if log:
-        wandb.init(project="CSR", entity="talso", name=run_name)
+        wandb.init(project="CSR_IL", entity="talso", name=run_name)
         wandb.config = {
             "learning_rate": lr,
             "epochs": n_iter,
