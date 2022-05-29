@@ -1,16 +1,14 @@
 import torch
 import torch.nn.functional as F
-from itertools import chain
 import skimage.io as io
 import os
 import tools
 from DIP.models.skip import skip
 import argparse
-from datetime import datetime
-import torchvision.transforms as T
-import torchvision.transforms.functional as TF
 import wandb
 import random
+import augmentations
+import numpy as np
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -78,9 +76,9 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
     for i in range(n_iter):
         optimizer.zero_grad()
         if IL and random.uniform(0, 1) > 0.5:
-            R, L, H, W = T.RandomCrop.get_params(y, output_size=[512, 512])
-            iter_input = TF.crop(net_input, R, L, H, W)
-            y_ref = TF.crop(y, R, L, H, W)
+            [iter_input, y_ref] = augmentations.augment(net_input, y)
+            io.imsave(tools.PROJ_PATH + '/test_in1.tiff', arr=np.stack(iter_input))
+            io.imsave(tools.PROJ_PATH + '/test_out1.tiff', arr=np.stack(y_ref))
         else:
             iter_input = net_input
             y_ref = y
