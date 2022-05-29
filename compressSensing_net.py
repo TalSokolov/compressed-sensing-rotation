@@ -18,7 +18,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser(description='Compressed Sensing')
 parser.add_argument('--lr', type=float, default=0.05)
 parser.add_argument('--n_iter', type=int, default=10000)
-parser.add_argument('--input_dim', type=int, default=32)
+parser.add_argument('--input_dim', type=int, default=0)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
 parser.add_argument('--IL', type=float, default=True)
@@ -45,10 +45,12 @@ def create_net(input_dim):
 
 def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         rand_noise, IL, log, save_path='outputs'):
+
+    # logging:
     run_name = 'lr {} input dim {} sparsity loss {} noise {} n_iter {} IL {}'.format(lr, input_dim, lambda_sparsity,
                                                                                   rand_noise, n_iter, IL)
     if log:
-        wandb.init(project="CSR_IL", entity="talso", name=run_name)
+        wandb.init(project="CSR", entity="talso", name=run_name)
         wandb.config = {
             "learning_rate": lr,
             "epochs": n_iter,
@@ -57,8 +59,13 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
             "noise": rand_noise
         }
 
-    net = create_net(input_dim)
-    noise = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
+    # net
+    if input_dim:
+        net_input = torch.randn(1, input_dim, y.shape[-2], y.shape[-1]).to(device)
+    else:
+        net_input = y
+
+    net = create_net(net_input.shape[1])
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
 
     print("start running with {}".format(run_name))
@@ -67,17 +74,17 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         optimizer.zero_grad()
         if IL and random.uniform(0, 1) > 0.5:
             R, L, H, W = T.RandomCrop.get_params(y, output_size=[512, 512])
-            net_input = TF.crop(noise, R, L, H, W)
+            iter_input = TF.crop(net_input, R, L, H, W)
             y_ref = TF.crop(y, R, L, H, W)
         else:
-            net_input = noise
+            iter_input = net_input
             y_ref = y
-        x = net(net_input)
+        x = net(iter_input)
 
         y_recon = F.conv2d(x, w)
-        loss_sparsity = (torch.count_nonzero(y_ref) - torch.count_nonzero(y_recon))/(2024*2024*3) #torch.mean(torch.abs(x))#
+        loss_sparsity = torch.mean(torch.abs(x))
         loss_recon = F.mse_loss(y_recon, y_ref)
-        loss = loss_recon + lambda_sparsity * abs(loss_sparsity)
+        loss = loss_recon + lambda_sparsity * loss_sparsity
         loss.backward()
         optimizer.step()
         if log:
@@ -90,7 +97,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
 
         if i % 100 == 0:
-            full_x = net(noise)
+            full_x = net(net_input)
 
             for j, channel in enumerate(channels_names):
                 io.imsave(os.path.join(save_path, 'pred_{}_{}.tif'.format(channel, run_name)),
@@ -101,7 +108,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
                 ch = F.relu(full_x)[0][j].detach().cpu().numpy()
                 tools.evaluate(ch, gt[j], j, run_name)
 
-    return noise
+    return net_input
 
 
 def run(args):
@@ -112,7 +119,7 @@ def run(args):
     opt(w, y, gt, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
         input_dim=args.input_dim, n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise, IL=args.IL, log=args.log,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
-    #
+
 
 if __name__ == '__main__':
 
