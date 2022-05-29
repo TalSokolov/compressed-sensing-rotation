@@ -48,7 +48,11 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
 
     # logging:
     run_name = 'lr {} input dim {} sparsity loss {} noise {} n_iter {} IL {}'.format(lr, input_dim, lambda_sparsity,
-                                                                                  rand_noise, n_iter, IL)
+                                                                                     rand_noise, n_iter, IL)
+
+    io.imsave(os.path.join(save_path, 'INPUT_{}.tif'.format(run_name)),
+              y.detach().cpu().numpy(),
+              check_contrast=False)
     if log:
         wandb.init(project="CSR", entity="talso", name=run_name)
         wandb.config = {
@@ -58,6 +62,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
             "sparcity_loss": lambda_sparsity,
             "noise": rand_noise
         }
+
 
     # net
     if input_dim:
