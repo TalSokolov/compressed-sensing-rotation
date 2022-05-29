@@ -21,8 +21,8 @@ parser.add_argument('--n_iter', type=int, default=10000)
 parser.add_argument('--input_dim', type=int, default=0)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
-parser.add_argument('--IL', type=float, default=False)
-parser.add_argument('--log', type=float, default=True)
+parser.add_argument('--IL', type=bool, default=False)
+parser.add_argument('--log', type=bool, default=True)
 
 
 def create_net(input_dim):
