@@ -27,10 +27,12 @@ def evaluate(ch, gt, idx, run_name):
     TP = np.sum((bool_gt + bool_ch) == 2)/(area)
     TN = np.sum((bool_gt + bool_ch) == 0)/(area)
 
+
     plt.figure(idx)
     plt.pie([FP, FN, TP, TN], labels=['False Positive', 'False Negative', 'True Positive', 'True Negative'], autopct='%1.1f%%')
     plt.title('Channel {}'.format(CHANNELS[idx]))
     plt.savefig(os.path.join(save_path, 'eval {}_{}.tiff'.format(CHANNELS[idx], run_name)))
+    print('{} f1 score: {}'.format(CHANNELS[idx], str(TP/(TP+0.5(FP+FN)))))
     plt.close()
     return
 
