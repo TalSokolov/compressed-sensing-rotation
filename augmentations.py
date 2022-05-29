@@ -6,8 +6,6 @@ import skimage.io as io
 import numpy as np
 import seaborn as sns
 import pandas as pd
-import PyQt5
-import matplotlib
 import matplotlib.pyplot as plt
 import random
 
