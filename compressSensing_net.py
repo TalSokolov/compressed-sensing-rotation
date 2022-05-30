@@ -78,7 +78,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         if IL and random.uniform(0, 1) > 0.5:
             [iter_input, y_ref] = augmentations.augment(net_input, y)
             io.imsave(tools.save_path + '/test_in{}.tiff'.format(i), arr=np.stack(iter_input.detach().cpu().numpy()))
-            io.imsave(tools.save_path + '/test_out{}.tiff'git .format(i), arr=np.stack(y_ref.detach().cpu().numpy()))
+            io.imsave(tools.save_path + '/test_out{}.tiff'.format(i), arr=np.stack(y_ref.detach().cpu().numpy()))
         else:
             iter_input = net_input
             y_ref = y
