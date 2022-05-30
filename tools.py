@@ -81,3 +81,6 @@ def load_w(mat_path='conf/default/mat.txt', basic=False):
 def save_ch(ch, channel_name):
     io.imsave(fname=os.path.join(PROJ_PATH, '{}-{}.tiff'.format(channel_name, 'Tal')), arr=ch)
     return
+
+def is_equal(y, y_ref):
+    return y.shape == y_ref.shape and bool(torch.all(torch.eq(y, y_ref)))

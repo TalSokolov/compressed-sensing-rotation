@@ -8,7 +8,6 @@ import argparse
 import wandb
 import random
 import augmentations
-import numpy as np
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -19,7 +18,7 @@ parser.add_argument('--n_iter', type=int, default=10000)
 parser.add_argument('--input_dim', type=int, default=0)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
-parser.add_argument('--IL', type=bool, default=False)
+parser.add_argument('--IL', type=bool, default=True)
 parser.add_argument('--log', type=bool, default=True)
 
 
@@ -48,9 +47,6 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
     run_name = 'lr {} input dim {} sparsity loss {} noise {} n_iter {} IL {}'.format(lr, input_dim, lambda_sparsity,
                                                                                      rand_noise, n_iter, IL)
 
-    io.imsave(os.path.join(save_path, 'INPUT_{}.tif'.format(run_name)),
-              y.detach().cpu().numpy(),
-              check_contrast=False)
     if log:
         wandb.init(project="CSR", entity="talso", name=run_name)
         wandb.config = {
@@ -60,7 +56,6 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
             "sparcity_loss": lambda_sparsity,
             "noise": rand_noise
         }
-
 
     # net
     if input_dim:
@@ -77,8 +72,6 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         optimizer.zero_grad()
         if IL and random.uniform(0, 1) > 0.5:
             [iter_input, y_ref] = augmentations.augment(net_input, y)
-            #io.imsave(tools.save_path + '/test_in{}.tiff'.format(i), arr=np.stack(iter_input.detach().cpu().numpy()))
-            #io.imsave(tools.save_path + '/test_out{}.tiff'.format(i), arr=np.stack(y_ref.detach().cpu().numpy()))
         else:
             iter_input = net_input
             y_ref = y
@@ -90,7 +83,7 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
         loss = loss_recon + lambda_sparsity * loss_sparsity
         loss.backward()
         optimizer.step()
-        if log:
+        if log and tools.is_equal(y, y_ref):
             wandb.log({"loss": loss})
             wandb.log({"loss reconstructin": loss_recon})
             wandb.log({"loss sparcity": loss_sparsity})
@@ -107,9 +100,9 @@ def opt(w, y, gt, lambda_sparsity, channels_names, lr, n_iter, input_dim,
                           full_x[0][j].detach().cpu().numpy(),
                           check_contrast=False)
 
-            for j, channel in enumerate(channels_names):
-                ch = F.relu(full_x)[0][j].detach().cpu().numpy()
-                tools.evaluate(ch, gt[j], j, run_name)
+    for j, channel in enumerate(channels_names):
+        ch = F.relu(full_x)[0][j].detach().cpu().numpy()
+        tools.evaluate(ch, gt[j], j, run_name)
 
     return net_input
 
