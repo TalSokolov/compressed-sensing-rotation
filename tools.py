@@ -7,6 +7,7 @@ import skimage.io as io
 CHANNELS = ['CD45', 'CD8', 'dsDNA', 'Ki67', 'Pan-Keratin', 'HLA-DR', 'SMA']
 MULTI = ['144_HLA_Keratin_Ki67_SMA', '147_CD8_HLA_dsDNA_SMA', '153_SMA_dsDNA_Keratin_CD45']
 PROJ_PATH = 'datasets/multi_clean_1304/B428_C'
+OTHERS_PATH = 'datasets/multi_clean_1304/IL'
 save_path = 'iterations/U_net'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

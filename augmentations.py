@@ -6,7 +6,25 @@ import matplotlib.pyplot as plt
 import random
 
 
-def augment(x, y):
+def augment(y):
+
+    i = random.uniform(0, 1)
+    if i < 0.3:
+        return T.RandomCrop([512, 512])(y)
+
+    elif i < 0.5:
+        return T.RandomHorizontalFlip(1)(y)
+
+    elif i < 0.7:
+        return T.RandomVerticalFlip(1)(y)
+
+    else:
+        return TF.rotate(img=y,angle=90*random.randint(1, 3))
+
+    return
+
+
+def old_augment(x, y):
 
     i = random.uniform(0, 1)
     if i < 0.3:
