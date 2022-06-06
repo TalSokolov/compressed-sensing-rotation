@@ -76,6 +76,8 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
         loss = loss_recon + lambda_sparsity * loss_sparsity
         loss.backward()
         optimizer.step()
+
+        wandb.log({"all iters loss": loss})
         if log and idx == 0:
             wandb.log({"loss": loss})
             wandb.log({"loss reconstructin": loss_recon})
