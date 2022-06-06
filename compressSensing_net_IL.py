@@ -67,7 +67,7 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
         iter_input = augmentations.crop(ys[idx])
         iter_input = augmentations.augment(iter_input)
         y_ref = iter_input
-        iter_input = iter_input + torch.randn(iter_input.shape).to(device)*random.uniform(0, 0.1)
+        iter_input = iter_input #+ torch.randn(iter_input.shape).to(device)*random.uniform(0, 0.1)
 
         x = net(iter_input)
         y_recon = F.conv2d(x, w)
