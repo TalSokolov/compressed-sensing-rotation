@@ -39,7 +39,7 @@ def create_net():
     return Net()
 
 
-def opt(w, y, gt, other_ys, lambda_sparsity, channels_names, lr, n_iter,
+def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
         rand_noise, log, save_path='outputs'):
 
     # logging:
@@ -62,25 +62,21 @@ def opt(w, y, gt, other_ys, lambda_sparsity, channels_names, lr, n_iter,
 
     for i in range(n_iter):
         optimizer.zero_grad()
-        other = False
-        iter_input = y
 
-        if random.uniform(0, 1) > 0.5:
-            iter_input = other_ys[random.randint(0, len(other_ys) - 1)]
-            other = True
-
-        if random.uniform(0, 1) > 0.5:
-            iter_input = augmentations.augment(iter_input)
-            other = True
+        idx = random.randint(0, len(ys) - 1)
+        iter_input = augmentations.crop(ys[idx])
+        iter_input = augmentations.augment(iter_input)
+        y_ref = iter_input
+        iter_input = iter_input + torch.randn(iter_input.shape).to(device)*random.uniform(0, 0.1)
 
         x = net(iter_input)
         y_recon = F.conv2d(x, w)
         loss_sparsity = torch.mean(torch.abs(x))
-        loss_recon = F.mse_loss(y_recon, iter_input)
+        loss_recon = F.mse_loss(y_recon, y_ref)
         loss = loss_recon + lambda_sparsity * loss_sparsity
         loss.backward()
         optimizer.step()
-        if log and not other:
+        if log and idx == 0:
             wandb.log({"loss": loss})
             wandb.log({"loss reconstructin": loss_recon})
             wandb.log({"loss sparcity": loss_sparsity})
@@ -89,7 +85,7 @@ def opt(w, y, gt, other_ys, lambda_sparsity, channels_names, lr, n_iter,
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
 
-    full_x = net(y)
+    full_x = net(ys[0])
 
     for j, channel in enumerate(channels_names):
         ch = F.relu(full_x)[0][j].detach().cpu().numpy()
@@ -105,10 +101,11 @@ def opt(w, y, gt, other_ys, lambda_sparsity, channels_names, lr, n_iter,
 def run(args):
     channels_names = tools.load_channels_names()
     y = tools.load_y(tools.PROJ_PATH, tools.MULTI)
+    ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(9)]
     other_ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(1, 9)]
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
-    opt(w, y, gt, other_ys, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
+    opt(w, y, gt, other_ys, ys, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
         n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise, log=args.log,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
 

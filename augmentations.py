@@ -6,22 +6,26 @@ import matplotlib.pyplot as plt
 import random
 
 
+def crop(y):
+    return T.RandomCrop([512, 512])(y)
+
+
 def augment(y):
 
-    i = random.uniform(0, 1)
-    if i < 0.3:
-        return T.RandomCrop([512, 512])(y)
+    out = TF.rotate(img=y, angle=90 * random.randint(1, 4))
+    out = T.RandomHorizontalFlip(0.5)(out)
 
-    elif i < 0.5:
-        return T.RandomHorizontalFlip(1)(y)
+    #i = random.uniform(0, 1)
+    #if i < 0.3:
+    #    return T.RandomHorizontalFlip(1)(y)
 
-    elif i < 0.7:
-        return T.RandomVerticalFlip(1)(y)
+    #elif i < 0.5:
+    #    return T.RandomVerticalFlip(1)(y)
 
-    else:
-        return TF.rotate(img=y,angle=90*random.randint(1, 3))
+    #else:
+    #    return TF.rotate(img=y, angle=90*random.randint(1, 4))
 
-    return
+    return out
 
 
 def old_augment(x, y):
