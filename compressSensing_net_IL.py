@@ -66,7 +66,7 @@ def opt(w, y, gt, other_ys, lambda_sparsity, channels_names, lr, n_iter,
         iter_input = y
 
         if random.uniform(0, 1) > 0.5:
-            iter_input = augmentations.augment(other_ys[random.randint(0, len(other_ys) - 1)])
+            iter_input = other_ys[random.randint(0, len(other_ys) - 1)]
             other = True
 
         if random.uniform(0, 1) > 0.5:
@@ -85,21 +85,19 @@ def opt(w, y, gt, other_ys, lambda_sparsity, channels_names, lr, n_iter,
             wandb.log({"loss reconstructin": loss_recon})
             wandb.log({"loss sparcity": loss_sparsity})
 
-        if i % 10 == 0:
+        if i % 100 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
                   f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
 
-        if i % 100 == 0:
-            full_x = net(y)
-
-            for j, channel in enumerate(channels_names):
-                io.imsave(os.path.join(save_path, 'pred_{}_{}.tif'.format(channel, run_name)),
-                          full_x[0][j].detach().cpu().numpy(),
-                          check_contrast=False)
+    full_x = net(y)
 
     for j, channel in enumerate(channels_names):
         ch = F.relu(full_x)[0][j].detach().cpu().numpy()
         tools.evaluate(ch, gt[j], j, run_name)
+
+        io.imsave(os.path.join(save_path, 'pred_{}_{}.tif'.format(channel, run_name)),
+                  full_x[0][j].detach().cpu().numpy(),
+                  check_contrast=False)
 
     return
 
