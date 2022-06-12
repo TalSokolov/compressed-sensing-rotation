@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import random
 
 
-def crop(y):
-    return T.RandomCrop([512, 512])(y)
+def crop(y, crop_size):
+    return T.RandomCrop([crop_size, crop_size])(y)
 
 
 def augment(y):
@@ -53,7 +53,7 @@ def old_augment(x, y):
 
 
 def plot_hetmap(file):
-    res = pd.read_csv(file, index_col=0)
+    res = pd.read_csv(file, index_col=0, sep='\t')
     fig = plt.figure()
     sns.heatmap(res, annot=True)
     fig.savefig('test',bbox_inches='tight')

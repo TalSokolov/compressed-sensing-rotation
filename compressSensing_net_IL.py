@@ -19,6 +19,7 @@ parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--lambda_mask', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
 parser.add_argument('--log', type=bool, default=True)
+parser.add_argument('--crop_size', type=int, default=512)
 
 
 def create_net():
@@ -40,10 +41,10 @@ def create_net():
 
 
 def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
-        rand_noise, log, save_path='outputs'):
+        rand_noise, crop_size, log, save_path='outputs'):
 
     # logging:
-    run_name = 'lr {} sparsity loss {} noise {} n_iter {}'.format(lr, lambda_sparsity, rand_noise, n_iter)
+    run_name = 'lr {} sparsity loss {} noise {} n_iter {} crop {}'.format(lr, lambda_sparsity, rand_noise, n_iter, crop_size)
 
     if log:
         wandb.init(project="CSR", entity="talso", name=run_name)
@@ -64,8 +65,8 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
         optimizer.zero_grad()
 
         idx = random.randint(0, len(ys) - 1)
-        iter_input = augmentations.crop(ys[idx])
-        iter_input = augmentations.augment(iter_input)
+        iter_input = augmentations.crop(ys[idx], crop_size)
+        #iter_input = augmentations.augment(iter_input) ##TODO: change this back to 9
         y_ref = iter_input
         iter_input = iter_input #+ torch.randn(iter_input.shape).to(device)*random.uniform(0, 0.1)
 
@@ -103,12 +104,12 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
 def run(args):
     channels_names = tools.load_channels_names()
     y = tools.load_y(tools.PROJ_PATH, tools.MULTI)
-    ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(9)]
+    ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(1)] ##TODO: change this back to 9
     other_ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(1, 9)]
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
     opt(w, y, gt, other_ys, ys, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
-        n_iter=args.n_iter, lr=args.lr, rand_noise=args.noise, log=args.log,
+        n_iter=args.n_iter, lr=args.lr, crop_size=args.crop_size, rand_noise=args.noise, log=args.log,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
 
 
