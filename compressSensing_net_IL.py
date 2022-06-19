@@ -146,7 +146,7 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr
 def run(args):
     channels_names = tools.load_channels_names()
     y = tools.load_y(tools.PROJ_PATH, tools.MULTI)
-    ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(1)] ##TODO: change this back to 9
+    ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(9)] ##TODO: change this back to 9
     other_ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(1, 9)]
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
