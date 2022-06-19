@@ -4,6 +4,7 @@ import skimage.io as io
 import os
 import tools
 from DIP.models.skip import skip
+from DIP.models.skip_omer import skip_omer
 import argparse
 import wandb
 import random
@@ -40,6 +41,32 @@ def create_net():
     return Net()
 
 
+def create_mask_net():
+    class Model(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.netG = skip_omer().to(device)
+
+        # no need to use this function at inference. just call netG, as in the previous message
+        def forward(self, input):
+            outputs = {}
+            outputs['x_pred'] = self.netG(input['y'])
+
+            return outputs
+
+    return Model()
+
+
+def calculate_mask_loss(output, mask):
+    # mask is a binary mask -- 1 where a positive expression is expected, 0 otherwise.
+    # output.shape == mask.shape (B, C, H, W): B=batch_size, C=7
+    neg_mask = 1 - mask
+    outputs_should_be_zero = output * neg_mask # we zero out values that are supposed to be positive according to the mask, keeping only the    ones that supposed to be zero
+    loss = (outputs_should_be_zero ** 2).mean() # we apply MSE loss on these pixels -- they are supposed to be zero
+    return loss
+
+
 def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
         rand_noise, crop_size, log, save_path='outputs'):
 
@@ -55,8 +82,12 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
             "noise": rand_noise
         }
 
-    # net
+    # nets
     net = create_net()
+    mask_net = create_mask_net().to(device)
+
+    checkpoint = torch.load(tools.checkpoint_path, map_location=lambda storage, loc: storage)
+    mask_net.load_state_dict(checkpoint["model"])
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
 
     print("start running with {}".format(run_name))
@@ -72,9 +103,18 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
 
         x = net(iter_input)
         y_recon = F.conv2d(x, w)
+
+        with torch.no_grad():
+            pred = mask_net.netG(iter_input)
+        # the output of the network is logits (i.e., no activaiton). So we apply sigmoid and get probabilites
+        pred_p = torch.sigmoid(pred)
+        # this makes the mask binary, with the threshold of 0.5
+        mask = (pred_p > 0.5).float()
+
         loss_sparsity = torch.mean(torch.abs(x))
         loss_recon = F.mse_loss(y_recon, y_ref)
-        loss = loss_recon + lambda_sparsity * loss_sparsity
+        loss_mask = calculate_mask_loss(x, mask)
+        loss = loss_recon + lambda_sparsity * loss_sparsity + loss_mask
         loss.backward()
         optimizer.step()
 
@@ -83,10 +123,11 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
             wandb.log({"loss": loss})
             wandb.log({"loss reconstructin": loss_recon})
             wandb.log({"loss sparcity": loss_sparsity})
+            wandb.log({"loss mask": loss_mask})
 
         if i % 100 == 0:
             print(f'Iteration {i}: loss={loss.item():.4f} | '
-                  f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f}')
+                  f'sparsity={loss_sparsity.item():.4f} | recon={loss_recon.item():.4f} | mask={loss_mask.item():.4f}')
 
     full_x = net(ys[0])
 

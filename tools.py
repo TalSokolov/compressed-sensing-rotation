@@ -9,6 +9,7 @@ MULTI = ['144_HLA_Keratin_Ki67_SMA', '147_CD8_HLA_dsDNA_SMA', '153_SMA_dsDNA_Ker
 PROJ_PATH = 'datasets/multi_clean_1304/B428_C'
 OTHERS_PATH = 'datasets/multi_clean_1304/IL'
 save_path = 'iterations/U_net'
+checkpoint_path = '/Users/leeatgen/PycharmProjects/compressed-sensing-rotation/model.ckpt-latest.pt'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
