@@ -18,6 +18,7 @@ parser.add_argument('--lr', type=float, default=0.05)
 parser.add_argument('--n_iter', type=int, default=10000)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--lambda_mask', type=float, default=1)
+parser.add_argument('--lambda_mask', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
 parser.add_argument('--log', type=bool, default=True)
 parser.add_argument('--crop_size', type=int, default=512)
@@ -67,11 +68,12 @@ def calculate_mask_loss(output, mask):
     return loss
 
 
-def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
+def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr, n_iter,
         rand_noise, crop_size, log, save_path='outputs'):
 
     # logging:
-    run_name = 'lr {} sparsity loss {} noise {} n_iter {} crop {}'.format(lr, lambda_sparsity, rand_noise, n_iter, crop_size)
+    run_name = 'lr {} sparsity loss {} mask loss {} noise {} n_iter {} crop {}'\
+        .format(lr, lambda_sparsity, lambda_mask, rand_noise, n_iter, crop_size)
 
     if log:
         wandb.init(project="CSR_masks", entity="talso", name=run_name)
@@ -114,7 +116,7 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, channels_names, lr, n_iter,
         loss_sparsity = torch.mean(torch.abs(x))
         loss_recon = F.mse_loss(y_recon, y_ref)
         loss_mask = calculate_mask_loss(x, mask)
-        loss = loss_recon + lambda_sparsity * loss_sparsity + loss_mask
+        loss = loss_recon + lambda_sparsity * loss_sparsity + lambda_mask * loss_mask
         loss.backward()
         optimizer.step()
 
@@ -149,7 +151,8 @@ def run(args):
     other_ys = [tools.load_y(tools.OTHERS_PATH, ['{} {}'.format(ch, str(i)) for ch in tools.MULTI]) for i in range(1, 9)]
     gt = tools.load_y(tools.PROJ_PATH, tools.CHANNELS, stack=False)
     w = tools.load_w()
-    opt(w, y, gt, other_ys, ys, lambda_sparsity=args.lambda_sparsity, channels_names=channels_names,
+    opt(w, y, gt, other_ys, ys, lambda_sparsity=args.lambda_sparsity, lambda_mask=args.lambda_mask,
+        channels_names=channels_names,
         n_iter=args.n_iter, lr=args.lr, crop_size=args.crop_size, rand_noise=args.noise, log=args.log,
         save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
 
