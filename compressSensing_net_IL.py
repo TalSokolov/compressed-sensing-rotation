@@ -72,8 +72,8 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr
         rand_noise, crop_size, log, batch_size, save_path='outputs'):
 
     # logging:
-    run_name = 'lr {} sparsity loss {} mask loss {} noise {} n_iter {} crop {}'\
-        .format(lr, lambda_sparsity, lambda_mask, rand_noise, n_iter, crop_size)
+    run_name = 'lr {} sparsity loss {} mask loss {} noise {} n_iter {} crop {} batch size {}'\
+        .format(lr, lambda_sparsity, lambda_mask, rand_noise, n_iter, crop_size, batch_size)
 
     if log:
         wandb.init(project="CSR_masks", entity="talso", name=run_name)
