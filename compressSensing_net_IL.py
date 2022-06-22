@@ -76,7 +76,7 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr
         .format(lr, lambda_sparsity, lambda_mask, rand_noise, n_iter, crop_size, batch_size)
 
     if log:
-        wandb.init(project="CSR_masks", entity="talso", name=run_name)
+        wandb.init(project="CSR_masks_fix", entity="talso", name=run_name)
         wandb.config = {
             "learning_rate": lr,
             "epochs": n_iter,
