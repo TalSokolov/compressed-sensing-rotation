@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import random
 
 
-def crop(y, crop_size):
-    return T.RandomCrop([crop_size, crop_size])(y)
+def crop(crop_size):
+    return T.RandomCrop([crop_size, crop_size])
 
 
 def augment(y):

@@ -20,7 +20,7 @@ parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--lambda_mask', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
 parser.add_argument('--log', type=bool, default=True)
-parser.add_argument('--crop_size', type=int, default=512)
+parser.add_argument('--crop_size', type=int, default=1024)
 parser.add_argument('--batch_size', type=int, default=1)
 
 
@@ -98,28 +98,32 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr
         optimizer.zero_grad()
 
         batch = []
+        mask_batch = []
         for b in range(batch_size):
             idx = random.randint(0, len(ys) - 1)
-            batch.append(augmentations.crop(ys[idx], crop_size))
+            augment = augmentations.crop(crop_size)
+            batch.append(augment(ys[idx]))
+
+            with torch.no_grad():
+                pred = mask_net.netG(ys[idx])
+            # the output of the network is logits (i.e., no activaiton). So we apply sigmoid and get probabilites
+            pred_p = torch.sigmoid(pred)
+            # this makes the mask binary, with the threshold of 0.5
+            mask = augment((pred_p > 0.5).float())
+            mask_batch.append(mask)
+
+        mask_batch = torch.cat(mask_batch)
         iter_input = torch.cat(batch)
 
-        #iter_input = augmentations.augment(iter_input) ##TODO: change this back to 9
         y_ref = iter_input
         iter_input = iter_input #+ torch.randn(iter_input.shape).to(device)*random.uniform(0, 0.1)
 
         x = net(iter_input)
         y_recon = F.conv2d(x, w)
 
-        with torch.no_grad():
-            pred = mask_net.netG(iter_input)
-        # the output of the network is logits (i.e., no activaiton). So we apply sigmoid and get probabilites
-        pred_p = torch.sigmoid(pred)
-        # this makes the mask binary, with the threshold of 0.5
-        mask = (pred_p > 0.5).float()
-
         loss_sparsity = torch.mean(torch.abs(x))
         loss_recon = F.mse_loss(y_recon, y_ref)
-        loss_mask = calculate_mask_loss(x, mask)
+        loss_mask = calculate_mask_loss(x, mask_batch)
         loss = loss_recon + lambda_sparsity * loss_sparsity + lambda_mask * loss_mask
         loss.backward()
         optimizer.step()
