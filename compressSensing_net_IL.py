@@ -22,6 +22,7 @@ parser.add_argument('--noise', type=float, default=0)
 parser.add_argument('--log', type=bool, default=True)
 parser.add_argument('--crop_size', type=int, default=1024)
 parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--train_size', type=int, default=1)
 
 
 def create_net():
@@ -69,7 +70,7 @@ def calculate_mask_loss(output, mask):
 
 
 def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr, n_iter,
-        rand_noise, crop_size, log, batch_size, save_path='outputs'):
+        rand_noise, crop_size, log, batch_size, train_size, save_path='outputs'):
 
     # logging:
     run_name = 'lr {} sparsity loss {} mask loss {} noise {} n_iter {} crop {} batch size {}'\
@@ -100,7 +101,7 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr
         batch = []
         mask_batch = []
         for b in range(batch_size):
-            idx = random.randint(0, len(ys) - 1)
+            idx = random.randint(0, train_size)
             augment = augmentations.crop(crop_size)
             batch.append(augment(ys[idx]))
 
@@ -162,7 +163,7 @@ def run(args):
     opt(w, y, gt, other_ys, ys, lambda_sparsity=args.lambda_sparsity, lambda_mask=args.lambda_mask,
         channels_names=channels_names,
         n_iter=args.n_iter, lr=args.lr, crop_size=args.crop_size, rand_noise=args.noise, log=args.log,
-        batch_size=args.batch_size, save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
+        batch_size=args.batch_size, train_size=args.train_size, save_path=tools.save_path.split('compressed-sensing-rotation/')[-1])
 
 
 if __name__ == '__main__':
