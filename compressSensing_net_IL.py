@@ -19,10 +19,10 @@ parser.add_argument('--n_iter', type=int, default=10000)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--lambda_mask', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
-parser.add_argument('--log', type=bool, default=True)
+parser.add_argument('--log', type=bool, default=False)
 parser.add_argument('--crop_size', type=int, default=1024)
 parser.add_argument('--batch_size', type=int, default=1)
-parser.add_argument('--train_size', type=int, default=1)
+parser.add_argument('--train_size', type=int, default=9)
 
 
 def create_net():
@@ -101,7 +101,7 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr
         batch = []
         mask_batch = []
         for b in range(batch_size):
-            idx = random.randint(0, train_size)
+            idx = random.randint(0, train_size-1)
             augment = augmentations.crop(crop_size)
             batch.append(augment(ys[idx]))
 
