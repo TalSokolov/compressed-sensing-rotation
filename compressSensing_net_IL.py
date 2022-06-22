@@ -19,10 +19,10 @@ parser.add_argument('--n_iter', type=int, default=10000)
 parser.add_argument('--lambda_sparsity', type=float, default=1)
 parser.add_argument('--lambda_mask', type=float, default=1)
 parser.add_argument('--noise', type=float, default=0)
-parser.add_argument('--log', type=bool, default=False)
+parser.add_argument('--log', type=bool, default=True)
 parser.add_argument('--crop_size', type=int, default=1024)
 parser.add_argument('--batch_size', type=int, default=1)
-parser.add_argument('--train_size', type=int, default=9)
+parser.add_argument('--train_size', type=int, default=1)
 
 
 def create_net():
