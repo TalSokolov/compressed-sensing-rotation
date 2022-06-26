@@ -65,7 +65,8 @@ def calculate_mask_loss(output, mask):
     # output.shape == mask.shape (B, C, H, W): B=batch_size, C=7
     neg_mask = 1 - mask
     outputs_should_be_zero = output * neg_mask # we zero out values that are supposed to be positive according to the mask, keeping only the    ones that supposed to be zero
-    loss = (outputs_should_be_zero ** 2).mean() # we apply MSE loss on these pixels -- they are supposed to be zero
+    #loss = (outputs_should_be_zero ** 2).mean() # we apply MSE loss on these pixels -- they are supposed to be zero
+    loss = sum([(outputs_should_be_zero ** 2)[0][i].mean() for i in range(outputs_should_be_zero.shape[1])])
     return loss
 
 
