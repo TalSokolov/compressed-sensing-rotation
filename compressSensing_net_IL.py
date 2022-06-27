@@ -64,7 +64,7 @@ def calculate_mask_loss(output, mask):
     # mask is a binary mask -- 1 where a positive expression is expected, 0 otherwise.
     # output.shape == mask.shape (B, C, H, W): B=batch_size, C=7
     neg_mask = 1 - mask
-    outputs_should_be_zero = (output > 0.0001).float() * neg_mask # we zero out values that are supposed to be positive according to the mask, keeping only the    ones that supposed to be zero
+    outputs_should_be_zero = torch.sigmoid(100*output-10) * neg_mask # we zero out values that are supposed to be positive according to the mask, keeping only the    ones that supposed to be zero
     loss = (outputs_should_be_zero ** 2).mean() # we apply MSE loss on these pixels -- they are supposed to be zero
     return loss
 
