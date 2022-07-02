@@ -61,11 +61,9 @@ def create_mask_net():
 
 
 def calculate_mask_loss(output, mask):
-    # mask is a binary mask -- 1 where a positive expression is expected, 0 otherwise.
-    # output.shape == mask.shape (B, C, H, W): B=batch_size, C=7
     neg_mask = 1 - mask
-    outputs_should_be_zero = torch.sigmoid(100*output-10) * neg_mask # we zero out values that are supposed to be positive according to the mask, keeping only the    ones that supposed to be zero
-    loss = (outputs_should_be_zero ** 2).mean() # we apply MSE loss on these pixels -- they are supposed to be zero
+    outputs_should_be_zero = output * neg_mask
+    loss = (outputs_should_be_zero ** 2).mean()
     return loss
 
 
@@ -109,7 +107,6 @@ def opt(w, y, gt, other_ys, ys, lambda_sparsity, lambda_mask, channels_names, lr
                 pred = mask_net.netG(ys[idx])
             # the output of the network is logits (i.e., no activaiton). So we apply sigmoid and get probabilites
             pred_p = torch.sigmoid(pred)
-            # this makes the mask binary, with the threshold of 0.5
             mask = augment((pred_p > 0.5).float())
             mask_batch.append(mask)
 
